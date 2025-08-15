@@ -29,6 +29,7 @@ import deleteInsight from "./insights/delete";
 import getInsight from "./insights/get";
 // Insights
 import getAllInsights from "./insights/getAll";
+import queryInsight from "./insights/query";
 import getSqlInsight from "./insights/getSqlInsight";
 import updateInsight from "./insights/update";
 
@@ -74,6 +75,7 @@ const tools = (_context: Context): Tool<ZodObjectAny>[] => [
 	createInsight(),
 	updateInsight(),
 	deleteInsight(),
+	queryInsight(),
 	getSqlInsight(),
 
 	// Dashboards

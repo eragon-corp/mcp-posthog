@@ -1,23 +1,24 @@
-import { describe, it, expect, beforeAll, afterEach } from "vitest";
 import {
-	validateEnvironmentVariables,
+	type CreatedResources,
+	SAMPLE_HOGQL_QUERIES,
+	TEST_ORG_ID,
+	TEST_PROJECT_ID,
+	cleanupResources,
 	createTestClient,
 	createTestContext,
-	setActiveProjectAndOrg,
-	cleanupResources,
-	parseToolResponse,
 	generateUniqueKey,
-	SAMPLE_HOGQL_QUERIES,
-	TEST_PROJECT_ID,
-	TEST_ORG_ID,
-	type CreatedResources,
+	parseToolResponse,
+	setActiveProjectAndOrg,
+	validateEnvironmentVariables,
 } from "@/shared/test-utils";
 import createInsightTool from "@/tools/insights/create";
-import updateInsightTool from "@/tools/insights/update";
 import deleteInsightTool from "@/tools/insights/delete";
-import getAllInsightsTool from "@/tools/insights/getAll";
 import getInsightTool from "@/tools/insights/get";
+import getAllInsightsTool from "@/tools/insights/getAll";
+import queryInsightTool from "@/tools/insights/query";
+import updateInsightTool from "@/tools/insights/update";
 import type { Context } from "@/tools/types";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 
 describe("Insights", { concurrent: false }, () => {
 	// All tests run sequentially to avoid conflicts with shared PostHog project
@@ -213,6 +214,38 @@ describe("Insights", { concurrent: false }, () => {
 			expect(retrievedInsight.name).toBe(createParams.data.name);
 			expect(retrievedInsight.description).toBe(createParams.data.description);
 			expect(retrievedInsight.url).toContain("/insights/");
+		});
+	});
+
+	describe("query-insight tool", () => {
+		const createTool = createInsightTool();
+		const queryTool = queryInsightTool();
+
+		it("should query an insight and return results with metadata", async () => {
+			const createParams = {
+				data: {
+					name: generateUniqueKey("Query Test Insight"),
+					description: "Test insight for query operation",
+					query: SAMPLE_HOGQL_QUERIES.pageviews,
+					saved: true,
+					favorited: false,
+				},
+			};
+
+			const createResult = await createTool.handler(context, createParams);
+			const createdInsight = parseToolResponse(createResult);
+			createdResources.insights.push(createdInsight.id);
+
+			const result = await queryTool.handler(context, {
+				insightId: createdInsight.id,
+			});
+			const queryResponse = parseToolResponse(result);
+
+			expect(queryResponse).toHaveProperty("insight");
+			expect(queryResponse).toHaveProperty("results");
+			expect(queryResponse.insight.id).toBe(createdInsight.id);
+			expect(queryResponse.insight.name).toBe(createParams.data.name);
+			expect(queryResponse.insight.url).toContain("/insights/");
 		});
 	});
 

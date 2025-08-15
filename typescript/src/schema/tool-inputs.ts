@@ -90,6 +90,10 @@ export const InsightGetSqlSchema = z.object({
 		.describe("Your natural language query describing the SQL insight (max 1000 characters)."),
 });
 
+export const InsightQuerySchema = z.object({
+	insightId: z.number(),
+});
+
 export const InsightUpdateSchema = z.object({
 	insightId: z.number(),
 	data: UpdateInsightInputSchema,

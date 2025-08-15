@@ -422,6 +422,8 @@ export class ApiClient {
 					name?: string | null | undefined;
 					short_id: string;
 					description?: string | null | undefined;
+					query?: any;
+					filters?: any;
 				}>
 			> => {
 				const simpleInsightSchema = z.object({
@@ -429,6 +431,8 @@ export class ApiClient {
 					name: z.string().nullish(),
 					short_id: z.string(),
 					description: z.string().nullish(),
+					query: z.any(),
+					filters: z.any(),
 				});
 
 				return this.fetchWithSchema(
@@ -486,6 +490,23 @@ export class ApiClient {
 				} catch (error) {
 					return { success: false, error: error as Error };
 				}
+			},
+
+			query: async ({
+				query,
+			}: {
+				query: Record<string, any>;
+			}): Promise<Result<any>> => {
+				const url = `${this.baseUrl}/api/environments/${projectId}/query/`;
+
+				const queryResponseSchema = z.object({
+					results: z.any(),
+				});
+
+				return this.fetchWithSchema(url, queryResponseSchema, {
+					method: "POST",
+					body: JSON.stringify({ query }),
+				});
 			},
 
 			sqlInsight: async ({ query }: { query: string }): Promise<Result<any[]>> => {
