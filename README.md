@@ -1,5 +1,7 @@
 # PostHog MCP
 
+Documentation: https://posthog.com/docs/model-context-protocol
+
 ## Use the MCP Server
 
 ### Quick install
@@ -36,6 +38,11 @@ npx @posthog/wizard@latest mcp add
 }
 ```
 
+### Example Prompts
+- What feature flags do I have active?
+- Add a new feature flag for our homepage redesign
+- What are my most common errors?
+
 ### Data residency
 
 The MCP server is hosted on a Cloudflare worker, this can be located outside of the EU / US, so there is no gaurantee that the data will be processed solely within a specific region.
@@ -43,12 +50,6 @@ The MCP server is hosted on a Cloudflare worker, this can be located outside of 
 ### Using self-hosted instances
 
 If you're using a self-hosted instance of PostHog, you can specify a custom base URL by adding the `POSTHOG_BASE_URL` [environment variable](https://developers.cloudflare.com/workers/configuration/environment-variables) when running the MCP server locally or on your own infrastructure, e.g. `POSTHOG_BASE_URL=https://posthog.example.com`
-
-**Here are some examples of prompts you can use:**
-- What feature flags do I have active?
-- Add a new feature flag for our homepage redesign
-- What are my most common errors?
-
 
 # Development
 
