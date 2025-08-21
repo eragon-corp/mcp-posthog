@@ -1,5 +1,10 @@
 import type { Context, Tool, ZodObjectAny } from "./types";
 
+import { ApiClient } from "@/api/client";
+import { StateManager } from "@/lib/utils/StateManager";
+import { MemoryCache } from "@/lib/utils/cache/MemoryCache";
+import { hash } from "@/lib/utils/helper-functions";
+
 import createFeatureFlag from "./featureFlags/create";
 import deleteFeatureFlag from "./featureFlags/delete";
 import getAllFeatureFlags from "./featureFlags/getAll";
@@ -47,7 +52,7 @@ import updateDashboard from "./dashboards/update";
 // LLM Observability
 import getLLMCosts from "./llmObservability/getLLMCosts";
 
-const tools = (_context: Context): Tool<ZodObjectAny>[] => [
+export const getToolsFromContext = (context: Context): Tool<ZodObjectAny>[] => [
 	// Feature Flags
 	getFeatureFlagDefinition(),
 	getAllFeatureFlags(),
@@ -66,7 +71,7 @@ const tools = (_context: Context): Tool<ZodObjectAny>[] => [
 	propertyDefinitions(),
 
 	// Documentation
-	searchDocs(),
+	...(context.env.INKEEP_API_KEY ? [searchDocs()] : []),
 
 	// Error Tracking
 	listErrors(),
@@ -96,5 +101,40 @@ const tools = (_context: Context): Tool<ZodObjectAny>[] => [
 	getLLMCosts(),
 ];
 
-export default tools;
+export type PostHogToolsOptions = {
+	posthogApiToken: string;
+	posthogApiBaseUrl: string;
+	inkeepApiKey?: string;
+};
+export class PostHogAgentToolkit {
+	public options: PostHogToolsOptions;
+
+	constructor(options: PostHogToolsOptions) {
+		this.options = options;
+	}
+
+	getContext(): Context {
+		const api = new ApiClient({
+			apiToken: this.options.posthogApiToken,
+			baseUrl: this.options.posthogApiBaseUrl,
+		});
+
+		const scope = hash(this.options.posthogApiToken);
+		const cache = new MemoryCache(scope);
+
+		return {
+			api,
+			cache,
+			env: {
+				INKEEP_API_KEY: this.options.inkeepApiKey,
+			},
+			stateManager: new StateManager(cache, api),
+		};
+	}
+	getTools(): Tool<ZodObjectAny>[] {
+		const context = this.getContext();
+		return getToolsFromContext(context);
+	}
+}
+
 export type { Context, State, Tool } from "./types";

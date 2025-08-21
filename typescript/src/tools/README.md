@@ -50,7 +50,7 @@ type Params = z.infer<typeof schema>;
 
 export const createHandler = async (context: Context, params: Params) => {
     const { name, key, description, filters, active, tags } = params;
-    const projectId = await context.getProjectId();
+    const projectId = await context.stateManager.getProjectId();
 
     // Call API client method
     const flagResult = await context.api.featureFlags({ projectId }).create({
@@ -91,7 +91,7 @@ export default tool;
 ```
 
 **Key Points:**
-- Use `context.getProjectId()` to get the active project
+- Use `context.stateManager.getProjectId()` to get the active project
 - Use `context.api` to make API calls
 - Add helpful information like URLs to responses
 - Handle errors gracefully with descriptive messages
