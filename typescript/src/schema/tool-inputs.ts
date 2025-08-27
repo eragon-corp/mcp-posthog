@@ -74,11 +74,11 @@ export const InsightCreateSchema = z.object({
 });
 
 export const InsightDeleteSchema = z.object({
-	insightId: z.number(),
+	insightId: z.string(),
 });
 
 export const InsightGetSchema = z.object({
-	insightId: z.number(),
+	insightId: z.string(),
 });
 
 export const InsightGetAllSchema = z.object({
@@ -93,11 +93,11 @@ export const InsightGetSqlSchema = z.object({
 });
 
 export const InsightQuerySchema = z.object({
-	insightId: z.number(),
+	insightId: z.string(),
 });
 
 export const InsightUpdateSchema = z.object({
-	insightId: z.number(),
+	insightId: z.string(),
 	data: UpdateInsightInputSchema,
 });
 
