@@ -27,5 +27,7 @@
 		}
 	},
 	"bootstrap-sha": "main",
-	"separate-pull-requests": true
+	"separate-pull-requests": true,
+	"always-link-local": false,
+	"skip-github-release": false
 }
