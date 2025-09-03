@@ -3,8 +3,6 @@
 	"packages": {
 		"typescript": {
 			"release-type": "node",
-			"path": "typescript",
-			"bootstrap-sha": "main",
 			"bump-minor-pre-major": true,
 			"bump-patch-for-minor-pre-major": true,
 			"include-v-in-tag": true,
@@ -17,8 +15,6 @@
 		},
 		"python": {
 			"release-type": "python",
-			"path": "python",
-			"bootstrap-sha": "main",
 			"bump-minor-pre-major": true,
 			"bump-patch-for-minor-pre-major": true,
 			"include-v-in-tag": true,
@@ -30,5 +26,6 @@
 			]
 		}
 	},
+	"bootstrap-sha": "main",
 	"separate-pull-requests": true
 }
