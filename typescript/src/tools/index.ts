@@ -18,11 +18,11 @@ import getOrganizationDetails from "./organizations/getDetails";
 import getOrganizations from "./organizations/getOrganizations";
 import setActiveOrganization from "./organizations/setActive";
 
+import eventDefinitions from "./projects/eventDefinitions";
 // Projects
 import getProjects from "./projects/getProjects";
 import getEventProperties from "./projects/propertyDefinitions";
 import setActiveProject from "./projects/setActive";
-import eventDefinitions from "./projects/eventDefinitions";
 
 // Documentation
 import searchDocs from "./documentation/searchDocs";
@@ -31,16 +31,16 @@ import errorDetails from "./errorTracking/errorDetails";
 // Error Tracking
 import listErrors from "./errorTracking/listErrors";
 
+import getExperiment from "./experiments/get";
 // Experiments
 import getAllExperiments from "./experiments/getAll";
-import getExperiment from "./experiments/get";
 
 import createInsight from "./insights/create";
 import deleteInsight from "./insights/delete";
+
 import getInsight from "./insights/get";
 // Insights
 import getAllInsights from "./insights/getAll";
-import getSqlInsight from "./insights/getSqlInsight";
 import queryInsight from "./insights/query";
 import updateInsight from "./insights/update";
 
@@ -48,9 +48,13 @@ import addInsightToDashboard from "./dashboards/addInsight";
 import createDashboard from "./dashboards/create";
 import deleteDashboard from "./dashboards/delete";
 import getDashboard from "./dashboards/get";
+
 // Dashboards
 import getAllDashboards from "./dashboards/getAll";
 import updateDashboard from "./dashboards/update";
+import generateHogQLFromQuestion from "./query/generateHogQLFromQuestion";
+// Query
+import queryRun from "./query/run";
 
 // LLM Observability
 import getLLMCosts from "./llmObservability/getLLMCosts";
@@ -93,7 +97,10 @@ const TOOL_MAP: Record<string, () => Tool<ZodObjectAny>> = {
 	"insight-update": updateInsight,
 	"insight-delete": deleteInsight,
 	"insight-query": queryInsight,
-	"get-sql-insight": getSqlInsight,
+
+	// Queries
+	"query-generate-hogql-from-question": generateHogQLFromQuestion,
+	"query-run": queryRun,
 
 	// Dashboards
 	"dashboards-get-all": getAllDashboards,
