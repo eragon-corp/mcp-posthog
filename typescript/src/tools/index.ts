@@ -56,8 +56,8 @@ import generateHogQLFromQuestion from "./query/generateHogQLFromQuestion";
 // Query
 import queryRun from "./query/run";
 
-// LLM Observability
-import getLLMCosts from "./llmObservability/getLLMCosts";
+// LLM Analytics
+import getLLMCosts from "./llmAnalytics/getLLMCosts";
 
 // Map of tool names to tool factory functions
 const TOOL_MAP: Record<string, () => Tool<ZodObjectAny>> = {
@@ -110,7 +110,7 @@ const TOOL_MAP: Record<string, () => Tool<ZodObjectAny>> = {
 	"dashboard-delete": deleteDashboard,
 	"add-insight-to-dashboard": addInsightToDashboard,
 
-	// LLM Observability
+	// LLM Analytics
 	"get-llm-total-costs-for-project": getLLMCosts,
 };
 
