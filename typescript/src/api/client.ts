@@ -4,8 +4,12 @@ import { getSearchParamsFromRecord } from "@/lib/utils/helper-functions";
 import {
 	type ApiEventDefinition,
 	ApiEventDefinitionSchema,
+	type ApiRedactedPersonalApiKey,
+	ApiRedactedPersonalApiKeySchema,
 	type ApiPropertyDefinition,
 	ApiPropertyDefinitionSchema,
+	type ApiUser,
+	ApiUserSchema,
 } from "@/schema/api";
 import {
 	type CreateDashboardInput,
@@ -160,6 +164,17 @@ export class ApiClient {
 						return result;
 					},
 				};
+			},
+		};
+	}
+
+	apiKeys() {
+		return {
+			current: async (): Promise<Result<ApiRedactedPersonalApiKey>> => {
+				return this.fetchWithSchema(
+					`${this.baseUrl}/api/personal_api_keys/@current`,
+					ApiRedactedPersonalApiKeySchema,
+				);
 			},
 		};
 	}
@@ -784,10 +799,10 @@ export class ApiClient {
 
 	users() {
 		return {
-			me: async (): Promise<Result<{ distinctId: string }>> => {
+			me: async (): Promise<Result<ApiUser>> => {
 				const result = await this.fetchWithSchema(
 					`${this.baseUrl}/api/users/@me/`,
-					z.object({ distinct_id: z.string() }),
+					ApiUserSchema,
 				);
 
 				if (!result.success) {
@@ -796,7 +811,7 @@ export class ApiClient {
 
 				return {
 					success: true,
-					data: { distinctId: result.data.distinct_id },
+					data: result.data,
 				};
 			},
 		};

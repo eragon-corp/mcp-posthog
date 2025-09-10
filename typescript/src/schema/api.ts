@@ -43,5 +43,29 @@ export const ApiListResponseSchema = <T extends z.ZodType>(dataSchema: T) =>
 		results: z.array(dataSchema),
 	});
 
+export const ApiUserSchema = z.object({
+	distinct_id: z.string(),
+	organizations: z.array(
+		z.object({
+			id: z.string().uuid(),
+		}),
+	),
+	team: z.object({
+		id: z.number(),
+		organization: z.string().uuid(),
+	}),
+	organization: z.object({
+		id: z.string().uuid(),
+	}),
+});
+
+export const ApiRedactedPersonalApiKeySchema = z.object({
+	scopes: z.array(z.string()), // TODO: restrict available tools automatically based on scopes
+	scoped_teams: z.array(z.number()),
+	scoped_organizations: z.array(z.string()),
+});
+
 export type ApiPropertyDefinition = z.infer<typeof ApiPropertyDefinitionSchema>;
 export type ApiEventDefinition = z.infer<typeof ApiEventDefinitionSchema>;
+export type ApiUser = z.infer<typeof ApiUserSchema>;
+export type ApiRedactedPersonalApiKey = z.infer<typeof ApiRedactedPersonalApiKeySchema>;

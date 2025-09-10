@@ -38,6 +38,7 @@ export class MyMCP extends McpAgent<Env> {
 		orgId: undefined,
 		distinctId: undefined,
 		region: undefined,
+		apiKey: undefined,
 	};
 
 	_cache: DurableObjectCache<State> | undefined;
@@ -126,8 +127,8 @@ export class MyMCP extends McpAgent<Env> {
 			if (!userResult.success) {
 				throw new Error(`Failed to get user: ${userResult.error.message}`);
 			}
-			await this.cache.set("distinctId", userResult.data.distinctId);
-			_distinctId = userResult.data.distinctId;
+			await this.cache.set("distinctId", userResult.data.distinct_id);
+			_distinctId = userResult.data.distinct_id;
 		}
 
 		return _distinctId;
@@ -202,9 +203,10 @@ export class MyMCP extends McpAgent<Env> {
 
 	async init() {
 		const context = await this.getContext();
+
 		// Get features from request properties if available
 		const features = this.requestProperties.features;
-		const allTools = getToolsFromContext(context, features);
+		const allTools = await getToolsFromContext(context, features);
 
 		for (const tool of allTools) {
 			this.registerTool(tool, async (params) => tool.handler(context, params));
