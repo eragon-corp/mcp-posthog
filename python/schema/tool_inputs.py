@@ -283,12 +283,28 @@ class FeatureFlagUpdateSchema(BaseModel):
     data: Data4
 
 
+class Kind(StrEnum):
+    INSIGHT_VIZ_NODE = "InsightVizNode"
+    DATA_VISUALIZATION_NODE = "DataVisualizationNode"
+
+
+class Query(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Kind
+    source: Any | None = None
+    """
+    For new insights, use the query from your successful query-run tool call. For updates, the existing query can optionally be reused.
+    """
+
+
 class Data5(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
     name: str
-    query: Any | None = None
+    query: Query
     description: str | None = None
     favorited: bool
     tags: list[str] | None = None
@@ -349,6 +365,17 @@ class InsightQueryInputSchema(BaseModel):
     insightId: str
 
 
+class Query1(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Kind
+    source: Any | None = None
+    """
+    For new insights, use the query from your successful query-run tool call. For updates, the existing query can optionally be reused
+    """
+
+
 class Data7(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -356,7 +383,7 @@ class Data7(BaseModel):
     name: str | None = None
     description: str | None = None
     filters: dict[str, Any] | None = None
-    query: Any | None = None
+    query: Query1
     favorited: bool | None = None
     dashboard: float | None = None
     tags: list[str] | None = None
@@ -767,7 +794,7 @@ class Source1(BaseModel):
     breakdownFilter: BreakdownFilter1 | None = None
 
 
-class Query(BaseModel):
+class Query2(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -811,7 +838,7 @@ class Source2(BaseModel):
     filters: Filters2 | None = None
 
 
-class Query1(BaseModel):
+class Query3(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -823,4 +850,4 @@ class QueryRunInputSchema(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    query: Query | Query1
+    query: Query2 | Query3

@@ -6,7 +6,14 @@ export const DashboardTileSchema = z.object({
 		name: z.string(),
 		derived_name: z.string().nullable(),
 		description: z.string().nullable(),
-		query: z.any(),
+		query: z.object({
+			kind: z.union([z.literal("InsightVizNode"), z.literal("DataVisualizationNode")]),
+			source: z
+				.any()
+				.describe(
+					"For new insights, use the query from your successful query-run tool call. For updates, the existing query can optionally be reused.",
+				), // NOTE: This is intentionally z.any() to avoid populating the context with the complicated query schema, but we prompt the LLM to use 'query-run' to check queries, before creating insights.
+		}),
 		created_at: z.string().nullish(),
 		updated_at: z.string().nullish(),
 		favorited: z.boolean().nullish(),
