@@ -42,7 +42,7 @@ jobs:
           echo "REPO_VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Prepare for building release
-        run: uv sync --extra dev
+        run: uv sync --group dev
         working-directory: python
 
       - name: Build package
