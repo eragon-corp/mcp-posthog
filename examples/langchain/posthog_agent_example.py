@@ -33,7 +33,7 @@ async def analyze_product_usage():
     
     # Initialize the LLM
     llm = ChatOpenAI(
-        model="gpt-4o-mini",
+        model="gpt-5-mini",
         temperature=0,
         api_key=os.getenv("OPENAI_API_KEY")
     )
@@ -59,7 +59,7 @@ async def analyze_product_usage():
         agent=agent,
         tools=tools,
         verbose=False,
-        max_iterations=5,
+        max_iterations=30,
     )
     
     # Invoke the agent with an analysis request
