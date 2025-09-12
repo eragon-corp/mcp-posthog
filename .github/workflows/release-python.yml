@@ -46,11 +46,11 @@ jobs:
         working-directory: python
 
       - name: Build package
-        run: python -m build
+        run: uv run python -m build
         working-directory: python
 
       - name: Publish to PyPI
-        run: python -m twine upload dist/*
+        run: uv run python -m twine upload dist/*
         working-directory: python
 
       - name: Create GitHub release
