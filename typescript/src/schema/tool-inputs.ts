@@ -9,6 +9,13 @@ import { ErrorDetailsSchema, ListErrorsSchema } from "./errors";
 import { FilterGroupsSchema, UpdateFeatureFlagInputSchema } from "./flags";
 import { CreateInsightInputSchema, ListInsightsSchema, UpdateInsightInputSchema } from "./insights";
 import { InsightQuerySchema } from "./query";
+import {
+	CreateSurveyInputSchema,
+	GetSurveySpecificStatsInputSchema,
+	GetSurveyStatsInputSchema,
+	ListSurveysInputSchema,
+	UpdateSurveyInputSchema,
+} from "./surveys";
 
 export const DashboardAddInsightSchema = z.object({
 	data: AddInsightToDashboardSchema,
@@ -142,6 +149,28 @@ export const ProjectPropertyDefinitionsInputSchema = z.object({
 
 export const ProjectSetActiveSchema = z.object({
 	projectId: z.number().int().positive(),
+});
+
+export const SurveyCreateSchema = CreateSurveyInputSchema;
+
+export const SurveyResponseCountsSchema = z.object({});
+
+export const SurveyGlobalStatsSchema = GetSurveyStatsInputSchema;
+
+export const SurveyStatsSchema = GetSurveySpecificStatsInputSchema;
+
+export const SurveyDeleteSchema = z.object({
+	surveyId: z.string(),
+});
+
+export const SurveyGetSchema = z.object({
+	surveyId: z.string(),
+});
+
+export const SurveyGetAllSchema = ListSurveysInputSchema;
+
+export const SurveyUpdateSchema = UpdateSurveyInputSchema.extend({
+	surveyId: z.string(),
 });
 
 export const QueryRunInputSchema = z.object({
