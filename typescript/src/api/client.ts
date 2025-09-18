@@ -19,11 +19,23 @@ import {
 	type SimpleDashboard,
 	SimpleDashboardSchema,
 } from "@/schema/dashboards";
-import type { Experiment } from "@/schema/experiments";
-import { ExperimentSchema } from "@/schema/experiments";
+import type {
+	Experiment,
+	ExperimentExposureQuery,
+	ExperimentExposureQueryResponse,
+	ExperimentUpdateApiPayload,
+} from "@/schema/experiments";
+import {
+	ExperimentCreatePayloadSchema,
+	ExperimentExposureQueryResponseSchema,
+	ExperimentExposureQuerySchema,
+	ExperimentSchema,
+	ExperimentUpdateApiPayloadSchema,
+} from "@/schema/experiments";
 import {
 	type CreateFeatureFlagInput,
 	CreateFeatureFlagInputSchema,
+	type FeatureFlag,
 	FeatureFlagSchema,
 	type UpdateFeatureFlagInput,
 	UpdateFeatureFlagInputSchema,
@@ -38,7 +50,7 @@ import {
 } from "@/schema/insights";
 import { type Organization, OrganizationSchema } from "@/schema/orgs";
 import { type Project, ProjectSchema } from "@/schema/projects";
-import { PropertyDefinitionSchema } from "@/schema/properties";
+import type { ExperimentCreateSchema } from "@/schema/tool-inputs";
 import { isShortId } from "@/tools/insights/utils";
 import { z } from "zod";
 import type {
@@ -315,6 +327,291 @@ export class ApiClient {
 					`${this.baseUrl}/api/projects/${projectId}/experiments/${experimentId}/`,
 					ExperimentSchema,
 				);
+			},
+
+			getExposures: async ({
+				experimentId,
+				refresh = false,
+			}: {
+				experimentId: number;
+				refresh: boolean;
+			}): Promise<
+				Result<{
+					exposures: ExperimentExposureQueryResponse;
+				}>
+			> => {
+				/**
+				 * we have to get the experiment details first. There's no guarantee
+				 * that the user has queried for the experiment details before.
+				 */
+				const experimentDetails = await this.experiments({ projectId }).get({
+					experimentId,
+				});
+				if (!experimentDetails.success) return experimentDetails;
+
+				const experiment = experimentDetails.data;
+
+				/**
+				 * Validate that the experiment has started
+				 */
+				if (!experiment.start_date) {
+					return {
+						success: false,
+						error: new Error(
+							`Experiment "${experiment.name}" has not started yet. Exposure data is only available for started experiments.`,
+						),
+					};
+				}
+
+				/**
+				 * create the exposure query
+				 */
+				const exposureQuery: ExperimentExposureQuery = {
+					kind: "ExperimentExposureQuery",
+					experiment_id: experimentId,
+					experiment_name: experiment.name,
+					exposure_criteria: experiment.exposure_criteria,
+					feature_flag: experiment.feature_flag as FeatureFlag,
+					start_date: experiment.start_date,
+					end_date: experiment.end_date,
+					holdout: experiment.holdout,
+				};
+
+				// Validate against existing ExperimentExposureQuerySchema
+				const validated = ExperimentExposureQuerySchema.parse(exposureQuery);
+
+				// The API expects a QueryRequest object with the query wrapped
+				const queryRequest: any = {
+					query: validated,
+					...(refresh ? { refresh: "blocking" } : {}),
+				};
+
+				const result = await this.fetchWithSchema(
+					`${this.baseUrl}/api/environments/${projectId}/query/`,
+					ExperimentExposureQueryResponseSchema,
+					{
+						method: "POST",
+						body: JSON.stringify(queryRequest),
+					},
+				);
+
+				if (!result.success) {
+					return result;
+				}
+
+				return {
+					success: true,
+					data: {
+						exposures: result.data,
+					},
+				};
+			},
+
+			getMetricResults: async ({
+				experimentId,
+				refresh = false,
+			}: {
+				experimentId: number;
+				refresh?: boolean;
+			}): Promise<
+				Result<{
+					experiment: Experiment;
+					primaryMetricsResults: any[];
+					secondaryMetricsResults: any[];
+					exposures: ExperimentExposureQueryResponse;
+				}>
+			> => {
+				/**
+				 * we have to get the experiment details first. There's no guarantee
+				 * that the user has queried for the experiment details before.
+				 */
+				const experimentDetails = await this.experiments({ projectId }).get({
+					experimentId,
+				});
+
+				if (!experimentDetails.success) return experimentDetails;
+
+				const experiment = experimentDetails.data;
+
+				/**
+				 * Validate that the experiment has started
+				 */
+				if (!experiment.start_date) {
+					return {
+						success: false,
+						error: new Error(
+							`Experiment "${experiment.name}" has not started yet. Results are only available for started experiments.`,
+						),
+					};
+				}
+
+				/**
+				 * let's get the experiment exposure details to get the full
+				 * picture of the resutls.
+				 */
+				const experimentExposure = await this.experiments({ projectId }).getExposures({
+					experimentId,
+					refresh,
+				});
+				if (!experimentExposure.success) return experimentExposure;
+
+				const { exposures } = experimentExposure.data;
+
+				// Prepare metrics queries
+				const sharedPrimaryMetrics = (experiment.saved_metrics || [])
+					.filter(({ metadata }) => metadata.type === "primary")
+					.map(({ query }) => query);
+				const allPrimaryMetrics = [...(experiment.metrics || []), ...sharedPrimaryMetrics];
+
+				const sharedSecondaryMetrics = (experiment.saved_metrics || [])
+					.filter(({ metadata }) => metadata.type === "secondary")
+					.map(({ query }) => query);
+				const allSecondaryMetrics = [
+					...(experiment.metrics_secondary || []),
+					...sharedSecondaryMetrics,
+				];
+
+				// Execute queries for primary metrics
+				const primaryResults = await Promise.all(
+					allPrimaryMetrics.map(async (metric) => {
+						try {
+							const queryBody = {
+								kind: "ExperimentQuery",
+								metric,
+								experiment_id: experimentId,
+							};
+
+							const queryRequest = {
+								query: queryBody,
+								...(refresh ? { refresh: "blocking" } : {}),
+							};
+
+							const result = await this.fetchWithSchema(
+								`${this.baseUrl}/api/environments/${projectId}/query/`,
+								z.any(),
+								{
+									method: "POST",
+									body: JSON.stringify(queryRequest),
+								},
+							);
+
+							return result.success ? result.data : null;
+						} catch (error) {
+							return null;
+						}
+					}),
+				);
+
+				// Execute queries for secondary metrics
+				const secondaryResults = await Promise.all(
+					allSecondaryMetrics.map(async (metric) => {
+						try {
+							const queryBody = {
+								kind: "ExperimentQuery",
+								metric,
+								experiment_id: experimentId,
+							};
+
+							const queryRequest = {
+								query: queryBody,
+								...(refresh ? { refresh: "blocking" } : {}),
+							};
+
+							const result = await this.fetchWithSchema(
+								`${this.baseUrl}/api/environments/${projectId}/query/`,
+								z.any(),
+								{
+									method: "POST",
+									body: JSON.stringify(queryRequest),
+								},
+							);
+
+							return result.success ? result.data : null;
+						} catch (error) {
+							return null;
+						}
+					}),
+				);
+
+				return {
+					success: true,
+					data: {
+						experiment,
+						primaryMetricsResults: primaryResults,
+						secondaryMetricsResults: secondaryResults,
+						exposures,
+					},
+				};
+			},
+
+			create: async (
+				experimentData: z.infer<typeof ExperimentCreateSchema>,
+			): Promise<Result<Experiment>> => {
+				// Transform agent input to API payload
+				const createBody = ExperimentCreatePayloadSchema.parse(experimentData);
+
+				return this.fetchWithSchema(
+					`${this.baseUrl}/api/projects/${projectId}/experiments/`,
+					ExperimentSchema,
+					{
+						method: "POST",
+						body: JSON.stringify(createBody),
+					},
+				);
+			},
+
+			update: async ({
+				experimentId,
+				updateData,
+			}: {
+				experimentId: number;
+				updateData: ExperimentUpdateApiPayload;
+			}): Promise<Result<Experiment>> => {
+				try {
+					const updateBody = ExperimentUpdateApiPayloadSchema.parse(updateData);
+
+					return this.fetchWithSchema(
+						`${this.baseUrl}/api/projects/${projectId}/experiments/${experimentId}/`,
+						ExperimentSchema,
+						{
+							method: "PATCH",
+							body: JSON.stringify(updateBody),
+						},
+					);
+				} catch (error) {
+					return { success: false, error: new Error(`Update failed: ${error}`) };
+				}
+			},
+
+			delete: async ({
+				experimentId,
+			}: { experimentId: number }): Promise<
+				Result<{ success: boolean; message: string }>
+			> => {
+				try {
+					const deleteResponse = await fetch(
+						`${this.baseUrl}/api/projects/${projectId}/experiments/${experimentId}/`,
+						{
+							method: "PATCH",
+							headers: this.buildHeaders(),
+							body: JSON.stringify({ deleted: true }),
+						},
+					);
+
+					if (deleteResponse.ok) {
+						return {
+							success: true,
+							data: { success: true, message: "Experiment deleted successfully" },
+						};
+					}
+
+					return {
+						success: false,
+						error: new Error(`Delete failed with status: ${deleteResponse.status}`),
+					};
+				} catch (error) {
+					return { success: false, error: new Error(`Delete failed: ${error}`) };
+				}
 			},
 		};
 	}
