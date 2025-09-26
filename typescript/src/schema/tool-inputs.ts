@@ -1,14 +1,10 @@
-import { z } from "zod";
 import {
 	AddInsightToDashboardSchema,
 	CreateDashboardInputSchema,
 	ListDashboardsSchema,
 	UpdateDashboardInputSchema,
 } from "./dashboards";
-import { ErrorDetailsSchema, ListErrorsSchema } from "./errors";
-import { FilterGroupsSchema, UpdateFeatureFlagInputSchema } from "./flags";
 import { CreateInsightInputSchema, ListInsightsSchema, UpdateInsightInputSchema } from "./insights";
-import { InsightQuerySchema } from "./query";
 import {
 	CreateSurveyInputSchema,
 	GetSurveySpecificStatsInputSchema,
@@ -16,6 +12,11 @@ import {
 	ListSurveysInputSchema,
 	UpdateSurveyInputSchema,
 } from "./surveys";
+import { ErrorDetailsSchema, ListErrorsSchema } from "./errors";
+import { FilterGroupsSchema, UpdateFeatureFlagInputSchema } from "./flags";
+
+import { InsightQuerySchema } from "./query";
+import { z } from "zod";
 
 export const DashboardAddInsightSchema = z.object({
 	data: AddInsightToDashboardSchema,
@@ -407,3 +408,46 @@ export const SurveyUpdateSchema = UpdateSurveyInputSchema.extend({
 export const QueryRunInputSchema = z.object({
 	query: InsightQuerySchema,
 });
+
+// Session replays
+export const SessionReplaysQueryInputSchema = z
+    .object({
+        pageUrlContains: z
+            .string()
+            .optional()
+            .describe("Filter sessions that viewed a URL containing this substring (case-insensitive)."),
+        eventName: z
+            .string()
+            .optional()
+            .default("$pageview")
+            .describe("Event name to match when filtering by page URL (default: $pageview)."),
+        minActiveMilliseconds: z
+            .number()
+            .int()
+            .nonnegative()
+            .optional()
+            .describe("Minimum active milliseconds recorded by session replay."),
+        limit: z
+            .number()
+            .int()
+            .positive()
+            .max(1000)
+            .optional()
+            .default(100)
+            .describe("Maximum rows to return (default 100, max 1000)."),
+        date_from: z
+            .string()
+            .nullable()
+            .optional()
+            .describe("ISO date or relative (e.g. -7d)."),
+        date_to: z
+            .string()
+            .nullable()
+            .optional()
+            .describe("ISO date or relative (e.g. today)."),
+        filterTestAccounts: z
+            .boolean()
+            .optional()
+            .describe("Whether to filter out internal test accounts."),
+    })
+    .describe("Query session replay metadata using HogQL over raw_session_replay_events.");

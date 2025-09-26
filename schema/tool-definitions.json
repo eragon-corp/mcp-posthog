@@ -614,5 +614,20 @@
 			"openWorldHint": true,
 			"readOnlyHint": true
 		}
-	}
+  ,
+  "session-replays-query": {
+    "description": "Query session replay metadata (not raw snapshots) using HogQL over raw_session_replay_events. Supports filtering by min active milliseconds, page URL substring, event name, and date range. Returns session_id, active_milliseconds, click_count, keypress_count, start/end times, session_duration, and first/last event times.",
+    "category": "Session replays",
+    "feature": "insights",
+    "summary": "Query session replay metadata with optional URL and time filters.",
+    "title": "Query session replays",
+    "required_scopes": ["query:read"],
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true
+    }
+  }
+}
 }

@@ -1,77 +1,66 @@
 import type { Context, Tool, ToolBase, ZodObjectAny } from "./types";
-
-import { ApiClient } from "@/api/client";
-import { SessionManager } from "@/lib/utils/SessionManager";
-import { StateManager } from "@/lib/utils/StateManager";
-import { MemoryCache } from "@/lib/utils/cache/MemoryCache";
-import { hash } from "@/lib/utils/helper-functions";
 import { getToolsForFeatures as getFilteredToolNames, getToolDefinition } from "./toolDefinitions";
 
+import { ApiClient } from "@/api/client";
+import { MemoryCache } from "@/lib/utils/cache/MemoryCache";
+import { SessionManager } from "@/lib/utils/SessionManager";
+import { StateManager } from "@/lib/utils/StateManager";
+import addInsightToDashboard from "./dashboards/addInsight";
+import createDashboard from "./dashboards/create";
+// Experiments
+import createExperiment from "./experiments/create";
 import createFeatureFlag from "./featureFlags/create";
+import createInsight from "./insights/create";
+// Surveys
+import createSurvey from "./surveys/create";
+import deleteDashboard from "./dashboards/delete";
+import deleteExperiment from "./experiments/delete";
 import deleteFeatureFlag from "./featureFlags/delete";
+import deleteInsight from "./insights/delete";
+import deleteSurvey from "./surveys/delete";
+import errorDetails from "./errorTracking/errorDetails";
+import eventDefinitions from "./projects/eventDefinitions";
+import generateHogQLFromQuestion from "./query/generateHogQLFromQuestion";
+// Dashboards
+import getAllDashboards from "./dashboards/getAll";
+import getAllExperiments from "./experiments/getAll";
 import getAllFeatureFlags from "./featureFlags/getAll";
+// Insights
+import getAllInsights from "./insights/getAll";
+import getAllSurveys from "./surveys/getAll";
+import getDashboard from "./dashboards/get";
+import getExperiment from "./experiments/get";
+import getExperimentResults from "./experiments/getResults";
 // Feature Flags
 import getFeatureFlagDefinition from "./featureFlags/getDefinition";
-import updateFeatureFlag from "./featureFlags/update";
-
+import getInsight from "./insights/get";
+// LLM Observability
+import getLLMCosts from "./llmAnalytics/getLLMCosts";
 import getOrganizationDetails from "./organizations/getDetails";
 // Organizations
 import getOrganizations from "./organizations/getOrganizations";
-import setActiveOrganization from "./organizations/setActive";
-
-import eventDefinitions from "./projects/eventDefinitions";
 // Projects
 import getProjects from "./projects/getProjects";
 import getProperties from "./projects/propertyDefinitions";
-import setActiveProject from "./projects/setActive";
-
-// Documentation
-import searchDocs from "./documentation/searchDocs";
-
-import errorDetails from "./errorTracking/errorDetails";
+import getSurvey from "./surveys/get";
+import { hasScopes } from "@/lib/utils/api";
+import { hash } from "@/lib/utils/helper-functions";
 // Error Tracking
 import listErrors from "./errorTracking/listErrors";
-
-// Experiments
-import createExperiment from "./experiments/create";
-import deleteExperiment from "./experiments/delete";
-import getExperiment from "./experiments/get";
-import getAllExperiments from "./experiments/getAll";
-import getExperimentResults from "./experiments/getResults";
-import updateExperiment from "./experiments/update";
-
-import createInsight from "./insights/create";
-import deleteInsight from "./insights/delete";
-
-import getInsight from "./insights/get";
-// Insights
-import getAllInsights from "./insights/getAll";
 import queryInsight from "./insights/query";
-import updateInsight from "./insights/update";
-
-import addInsightToDashboard from "./dashboards/addInsight";
-import createDashboard from "./dashboards/create";
-import deleteDashboard from "./dashboards/delete";
-import getDashboard from "./dashboards/get";
-
-// Dashboards
-import getAllDashboards from "./dashboards/getAll";
-import updateDashboard from "./dashboards/update";
-import generateHogQLFromQuestion from "./query/generateHogQLFromQuestion";
 // Query
 import queryRun from "./query/run";
-
-import { hasScopes } from "@/lib/utils/api";
-// LLM Observability
-import getLLMCosts from "./llmAnalytics/getLLMCosts";
-
-// Surveys
-import createSurvey from "./surveys/create";
-import deleteSurvey from "./surveys/delete";
-import getSurvey from "./surveys/get";
-import getAllSurveys from "./surveys/getAll";
-import surveysGlobalStats from "./surveys/global-stats";
+// Documentation
+import searchDocs from "./documentation/searchDocs";
+import sessionReplaysQuery from "./sessionReplays/query";
+import setActiveOrganization from "./organizations/setActive";
+import setActiveProject from "./projects/setActive";
 import surveyStats from "./surveys/stats";
+import surveysGlobalStats from "./surveys/global-stats";
+import updateDashboard from "./dashboards/update";
+import updateExperiment from "./experiments/update";
+import updateFeatureFlag from "./featureFlags/update";
+import updateInsight from "./insights/update";
 import updateSurvey from "./surveys/update";
 
 // Map of tool names to tool factory functions
@@ -120,6 +109,9 @@ const TOOL_MAP: Record<string, () => ToolBase<ZodObjectAny>> = {
 	// Queries
 	"query-generate-hogql-from-question": generateHogQLFromQuestion,
 	"query-run": queryRun,
+
+	// Session Replays
+	"session-replays-query": sessionReplaysQuery,
 
 	// Dashboards
 	"dashboards-get-all": getAllDashboards,
