@@ -15,16 +15,23 @@ function getAuthHeaderValue() {
 
 function getTargetUrl(incomingPath, incomingSearch) {
   const remote = new URL(REMOTE_MCP_URL);
-  // Map incoming /mcp and /sse to remote host
+  // Preserve subpaths for /mcp and /sse (e.g. /sse/message)
   let targetPath = incomingPath;
+
   if (incomingPath.startsWith("/mcp")) {
-    // Use the configured remote MCP path
-    targetPath = remote.pathname;
+    const base = remote.pathname; // e.g. /mcp or /some/prefix/mcp
+    const rest = incomingPath.slice("/mcp".length); // keep subpath like /message
+    const baseTrimmed = base.replace(/\/+$/, "");
+    targetPath = rest ? `${baseTrimmed}${rest}` : baseTrimmed || "/";
   } else if (incomingPath.startsWith("/sse")) {
-    // Derive SSE path from the remote MCP path if possible
-    const ssePath = remote.pathname.replace(/\bmcp\b/, "sse");
-    targetPath = ssePath === remote.pathname ? "/sse" : ssePath;
+    // Derive SSE base from the remote MCP path if possible
+    const derived = remote.pathname.replace(/\bmcp\b/, "sse");
+    const sseBase = derived === remote.pathname ? "/sse" : derived;
+    const rest = incomingPath.slice("/sse".length); // keep subpath like /message
+    const baseTrimmed = sseBase.replace(/\/+$/, "");
+    targetPath = rest ? `${baseTrimmed}${rest}` : baseTrimmed || "/";
   }
+
   const target = new URL(remote.origin);
   target.pathname = targetPath;
   target.search = incomingSearch || "";
