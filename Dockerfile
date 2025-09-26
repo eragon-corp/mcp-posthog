@@ -10,6 +10,11 @@ RUN npm install -g mcp-remote@latest
 # Set default environment variable for POSTHOG_REMOTE_MCP_URL
 ENV POSTHOG_REMOTE_MCP_URL=https://mcp.posthog.com/mcp
 
-# The entrypoint will run mcp-remote with proper stdio handling
-# POSTHOG_AUTH_HEADER should be just the token (e.g., phx_...), we'll add "Bearer " prefix
-ENTRYPOINT ["sh", "-c", "mcp-remote \"${POSTHOG_REMOTE_MCP_URL}\" --header \"Authorization:Bearer ${POSTHOG_AUTH_HEADER}\""]
+# Copy the proxy server that will listen on $PORT and forward to the remote MCP
+COPY server.js ./
+
+# Cloud Run requires the container to listen on the PORT env var (default 8080)
+ENV PORT=8080
+
+# Start the HTTP proxy server
+ENTRYPOINT ["node", "server.js"]
