@@ -5,7 +5,7 @@ description = "PostHog LangChain integration example"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "langchain>=0.3.0",
+    "langchain>=0.3.30",
     "langchain-openai>=0.2.0",
     "langchain-core>=0.3.0",
     "python-dotenv>=1.0.0",
